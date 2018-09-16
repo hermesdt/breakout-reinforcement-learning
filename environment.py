@@ -6,6 +6,7 @@ import torch
 from torch import nn
 import skimage
 from skimage.transform import resize as skresize
+from collections import deque
 
 def rgb2grey(frame):
     return skimage.color.rgb2grey(frame)
@@ -19,37 +20,40 @@ class Environment():
         self.image_size = image_size
         self.last_frame = self.env.reset()
         self.last_info = None
+        self.frames = deque(maxlen=2)
     
     def reset(self):
-        self.last_frame = self.env.reset()
-        self.last_frame, reward, done, info = self.env.step(0)
-        self.last_frame, reward, done, info = self.env.step(1)
-        self.last_frame, reward, done, info = self.env.step(2)
-        frame, reward, done, self.last_info = self.env.step(3)
+        self.frames.clear()
+        if self.last_info and self.last_info['ale.lives'] <= 0:
+            self.frames.append(self.env.reset())
+        frame, reward, done, info = self.env.step(1)
+        self.frames.append(frame)
         
-        state = self.build_state(self.last_frame, frame)
-        self.last_frame = frame
-        
+        state = self.build_state()
         return state
     
     def render(self):
         self.env.render()
     
-    def build_state(self, frame1, frame2):
-        frame_shape = frame1.shape
-        s = np.stack([
-            rgb2grey(resize(frame1, self.image_size)),
-            rgb2grey(resize(frame2, self.image_size))
-        ], axis=0).reshape([1, 2, *self.image_size])
-        return s
+    def build_state(self):
+        state = np.zeros([1, 2, *self.image_size], dtype=np.float)
+        for idx, frame in enumerate(list(self.frames)):
+            state[0, idx] = rgb2grey(resize(frame, self.image_size))
+        #s = np.stack([
+        #    rgb2grey(resize(frame1, self.image_size)),
+        #    rgb2grey(resize(frame2, self.image_size))
+        #], axis=0).reshape([1, 2, *self.image_size])
+        return state
     
     def step(self, action):
         frame, reward, done, info = self.env.step(action)
-        state = self.build_state(self.last_frame, frame)
+        self.frames.append(frame)
+        state = self.build_state()
         
         if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
             done = True
-            reward = 0
+            #reward = 0
+
             
         self.last_frame = frame
         self.last_info = info

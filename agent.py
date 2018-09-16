@@ -20,7 +20,7 @@ class Agent():
         self.total_reward = 0
         self.num_episodes += 1
 
-        if self.num_episodes % 10 == 0:
+        if self.num_episodes % 20 == 0:
             print("learning started")
             self.learn_from_memory()
             print("finished learning")
