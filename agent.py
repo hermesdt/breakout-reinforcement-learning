@@ -11,7 +11,7 @@ class Agent():
         self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.episodes = deque([Episode()], maxlen=50)
+        self.episodes = deque([Episode()], maxlen=100)
         self.total_reward = 0
     
     def reset(self):

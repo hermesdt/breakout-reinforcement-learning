@@ -6,9 +6,9 @@ import math
 class Actor(nn.Module):
     def __init__(self, observation_shape, num_actions, lr=0.001):
         super().__init__()
-        self.linear1 = nn.Linear(observation_shape, 512)
+        self.linear1 = nn.Linear(observation_shape, 64)
         self.sigmoid1 = nn.Sigmoid()
-        self.linear2 = nn.Linear(512, num_actions)
+        self.linear2 = nn.Linear(64, num_actions)
         self.sigmoid2 = nn.Sigmoid()
         self.softmax = nn.Softmax()
         
@@ -39,9 +39,9 @@ class Critic(nn.Module):
     def __init__(self, observation_shape, num_actions,
                 lr=0.001):
         super().__init__()
-        self.linear1 = nn.Linear(observation_shape, 512)
+        self.linear1 = nn.Linear(observation_shape, 64)
         self.sigmoid1 = nn.Sigmoid()
-        self.linear2 = nn.Linear(512, 1)
+        self.linear2 = nn.Linear(64, 1)
         #self.nonlinearity = nn.ReLU()
         
         self.optim = torch.optim.RMSprop(self.parameters(), lr=lr)
@@ -55,7 +55,7 @@ class Critic(nn.Module):
         #x = self.nonlinearity(x)
         return x
     
-    def train(self, data, gamma=0.98, n_step=256):
+    def train(self, data, gamma=0.98, n_step=32):
         (states, actions, rewards, new_states, dones) = data
         x = torch.Tensor(states)
 
@@ -73,7 +73,7 @@ class Critic(nn.Module):
         return td_error
 
 class PPO():
-    def __init__(self, observation_shape, num_actions, gamma=0.98, n_steps=256):
+    def __init__(self, observation_shape, num_actions, gamma=0.98, n_steps=32):
         self.num_actions = num_actions
         self.gamma = gamma
         self.n_steps = n_steps
