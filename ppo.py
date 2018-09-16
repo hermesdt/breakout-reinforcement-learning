@@ -97,11 +97,11 @@ class PPO():
             actions.append(oh_action)
 
             reward = 0
-            for df_idx, (_, _, r, _, _) in enumerate(episode[::-1][idx:min(idx+self.n_steps, len(episode))]):
+            for df_idx, (_, _, r, _, _) in enumerate(episode[idx:min(idx+self.n_steps, len(episode))][::-1]):
                 reward += r*self.gamma**df_idx
 
             rewards.append(reward)
-            new_states.append(new_state)
+            new_states.append(episode[min(idx+self.n_steps, len(episode)-1)][3])
             dones.append(done)
         
         states = np.array(states).reshape([len(states), *states[0].shape[1:]])

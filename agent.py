@@ -8,19 +8,22 @@ class Agent():
         self.num_actions = num_actions
         self.algo = PPO(observation_shape, num_actions)
         self.num_steps = 0
+        self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.episodes = deque([Episode()], maxlen=4)
+        self.episodes = deque([Episode()], maxlen=50)
         self.total_reward = 0
     
     def reset(self):
         print("Total reward:", self.total_reward, "Num steps:", self.num_steps)
         self.num_steps = 0
         self.total_reward = 0
+        self.num_episodes += 1
 
-        print("learning started")
-        self.learn_from_memory()
-        print("finished learning")
+        if self.num_episodes % 10 == 0:
+            print("learning started")
+            self.learn_from_memory()
+            print("finished learning")
 
         self.episodes.append(Episode())
         # self.memory.clear()
