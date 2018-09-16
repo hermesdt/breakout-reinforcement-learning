@@ -22,10 +22,10 @@ class Agent():
         self.memory.append((state, action, reward, new_state, done))
     
     def learn_from_memory(self):
-        self.algo.fit(self.memory)
+        self.algo.fit(self.memory, bs=128)
     
     def step(self, state):
-        action_probs = self.algo.eval(state).double()
+        action_probs = self.algo.eval(state).double()[0]
         action_probs = action_probs/action_probs.sum()
         action = np.random.choice(range(self.num_actions), p=action_probs)
         
@@ -38,7 +38,7 @@ class Agent():
         self.total_num_steps += 1
         self.total_reward += reward
         
-        if self.total_num_steps % self.memory.maxlen//2 == 0:
+        if self.total_num_steps % (self.memory.maxlen//2) == 0:
             print("learning started")
             self.learn_from_memory()
             print("finished learning")

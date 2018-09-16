@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import numpy as np
+import math
 
 class Actor(nn.Module):
     def __init__(self, observation_shape, num_actions, lr=0.001):
@@ -12,14 +13,16 @@ class Actor(nn.Module):
         
         self.optim = torch.optim.RMSprop(self.parameters(), lr=lr)
     
-    def forward(self, x):
+    def forward(self, input):
+        bs = input.size(0)
+        x = input.view(bs, -1)
         x = self.linear1(x)
         x = self.sigmoid1(x)
         x = self.linear2(x)
         x = self.softmax(x)
         return x
     
-    def train(self, data, td_error):
+    def train(self, data, td_error, bs=32):
         (states, actions, rewards, new_states, dones) = data
         self.optim.zero_grad()
         # loss = self.criterion(self.forward(torch.Tensor(states)), targets)
@@ -40,7 +43,9 @@ class Critic(nn.Module):
         
         self.optim = torch.optim.RMSprop(self.parameters(), lr=lr)
     
-    def forward(self, x):
+    def forward(self, input):
+        bs = input.size(0)
+        x = input.view(bs, -1)
         x = self.linear1(x)
         x = self.sigmoid1(x)
         x = self.linear2(x)
@@ -49,8 +54,9 @@ class Critic(nn.Module):
     
     def train(self, data):
         (states, actions, rewards, new_states, dones) = data
-        x = states
-        y_hat = self.forward(torch.Tensor(x))
+        x = torch.Tensor(states)
+
+        y_hat = self.forward(x)
         v_h = self.forward(torch.Tensor(new_states))
         v_h[dones == True] = 0
         y = torch.Tensor(rewards.reshape(1, -1)) + 0.98**64*v_h
@@ -58,7 +64,6 @@ class Critic(nn.Module):
         td_error = y - y_hat
         
         self.optim.zero_grad()
-        # loss = self.criterion(y_hat, y)
         td_error.sum().backward()
         self.optim.step()
         
@@ -87,7 +92,7 @@ class PPO():
         #probs[0] -= 1 - np.round(probs, decimals=4).sum()
         return probs
     
-    def fit(self, data):
+    def fit(self, data, bs=32):
         states, actions, rewards, new_states, dones = [], [], [], [], []
         n_steps = 64
         df = 0.98
@@ -105,15 +110,16 @@ class PPO():
             new_states.append(new_state)
             dones.append(done)
         
-        states = np.array(states)
+        states = np.array(states).reshape([len(states), *states[0].shape[1:]])
         actions = np.array(actions)
         rewards = np.array(rewards)
-        new_states = np.array(new_states)
+        new_states = np.array(new_states).reshape([len(new_states), *new_states[0].shape[1:]])
         
         data = (states, actions, rewards, new_states, dones)
-        
-        td_error = self.critic.train(data)
-        self.actor.train(data, td_error)
+
+        for b in range(math.ceil(len(data)/bs)):
+            td_error = self.critic.train(data[b:b+bs])
+            self.actor.train(data, td_error)
         
         
 # env = Environment()

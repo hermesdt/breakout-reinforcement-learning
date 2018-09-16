@@ -31,17 +31,16 @@ class Environment():
         self.env.render()
     
     def build_state(self, frame1, frame2):
-        return np.stack([
+        frame_shape = frame1.shape
+        s = np.stack([
             rgb2grey(frame1),
             rgb2grey(frame2)
-        ], axis=2).reshape(-1)
+        ], axis=0).reshape([1, 2, frame_shape[0], frame_shape[1]])
+        return s
     
     def step(self, action):
         frame, reward, done, info = self.env.step(action)
-        state = np.stack([
-            rgb2grey(self.last_frame),
-            rgb2grey(frame)
-        ], axis=2).reshape(-1)
+        state = self.build_state(self.last_frame, frame)
         
         if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
             done = True
