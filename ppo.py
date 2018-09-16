@@ -71,8 +71,6 @@ class Critic(nn.Module):
         self.optim.step()
         
         return td_error
-        
-        
 
 class PPO():
     def __init__(self, observation_shape, num_actions, gamma=0.98, n_steps=256):
@@ -88,25 +86,18 @@ class PPO():
             torch.autograd.Variable(torch.Tensor(state), requires_grad=False)
         ).detach()
         
-        # probs = np.full(num_actions, self.epsilon/num_actions)
-        # action = np.argmax(probs)
-        # probs[action] = 1 - self.epsilon + self.epsilon / num_actions
-        # return probs
-        
-        #probs = np.round(probs, decimals=4)
-        #probs[0] -= 1 - np.round(probs, decimals=4).sum()
         return probs
     
-    def fit(self, data, bs=32):
+    def fit(self, episode, bs=32):
         states, actions, rewards, new_states, dones = [], [], [], [], []
         
-        for idx, (state, action, reward, new_state, done) in enumerate(list(data)):
+        for idx, (state, action, reward, new_state, done) in enumerate(episode):
             states.append(state)
             oh_action = [1 if i == action else 0 for i in range(self.num_actions)]
             actions.append(oh_action)
 
             reward = 0
-            for df_idx, (_, _, r, _, _) in enumerate(list(data)[::-1][idx:min(idx+self.n_steps, len(data))]):
+            for df_idx, (_, _, r, _, _) in enumerate(episode[::-1][idx:min(idx+self.n_steps, len(episode))]):
                 reward += r*self.gamma**df_idx
 
             rewards.append(reward)
