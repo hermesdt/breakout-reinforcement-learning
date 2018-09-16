@@ -5,13 +5,18 @@ import numpy as np
 import torch
 from torch import nn
 import skimage
+from skimage.transform import resize as skresize
 
 def rgb2grey(frame):
     return skimage.color.rgb2grey(frame)
 
+def resize(frame, output_shape):
+    return skresize(frame, output_shape)
+
 class Environment():
-    def __init__(self):
+    def __init__(self, image_size = [80, 80]):
         self.env = gym.make("Breakout-v4")
+        self.image_size = image_size
         self.last_frame = self.env.reset()
         self.last_info = None
     
@@ -33,9 +38,9 @@ class Environment():
     def build_state(self, frame1, frame2):
         frame_shape = frame1.shape
         s = np.stack([
-            rgb2grey(frame1),
-            rgb2grey(frame2)
-        ], axis=0).reshape([1, 2, frame_shape[0], frame_shape[1]])
+            rgb2grey(resize(frame1, self.image_size)),
+            rgb2grey(resize(frame2, self.image_size))
+        ], axis=0).reshape([1, 2, *self.image_size])
         return s
     
     def step(self, action):

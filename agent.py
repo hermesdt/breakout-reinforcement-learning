@@ -9,7 +9,7 @@ class Agent():
         self.num_steps = 0
         self.total_num_steps = 0
         self.env = env
-        self.memory = deque(maxlen=2000)
+        self.memory = deque(maxlen=10000)
         self.total_reward = 0
     
     def reset(self):
@@ -38,7 +38,7 @@ class Agent():
         self.total_num_steps += 1
         self.total_reward += reward
         
-        if self.total_num_steps % (self.memory.maxlen//2) == 0:
+        if self.total_num_steps % (self.memory.maxlen//10) == 0:
             print("learning started")
             self.learn_from_memory()
             print("finished learning")
