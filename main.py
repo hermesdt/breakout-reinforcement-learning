@@ -5,7 +5,7 @@ from runner import Runner
 
 env = gym.make("Breakout-v4")
 num_actions = env.action_space.n
-image_size = [80, 80]
+image_size = [210, 160]
 
 rows, cols, channels = env.observation_space.shape
 print("frame shape:", (rows, cols, channels))
