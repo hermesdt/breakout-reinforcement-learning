@@ -37,6 +37,7 @@ class Episode():
         states = np.array(states).reshape([len(states), *states[0].shape[1:]])
         actions = np.array(actions)
         rewards = np.array(rewards)
+        dones = np.array(dones, dtype=np.uint8)
         new_states = np.array(new_states).reshape([len(new_states), *new_states[0].shape[1:]])
         
         self._processed_data = (states, actions, rewards, new_states, dones)

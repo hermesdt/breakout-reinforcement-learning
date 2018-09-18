@@ -19,5 +19,4 @@ env = Environment(image_size=image_size)
 runner = Runner(env, observation_shape, num_actions)
 
 while True:
-    runner.run(episodes=20, render=False, learn=True)
-    runner.run(episodes=20, render=False, learn=True)
+    runner.run(episodes=20, render=True, learn=True)

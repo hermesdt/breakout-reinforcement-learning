@@ -1,10 +1,10 @@
 from collections import deque
 import numpy as np
 from ppo import PPO
-import numpy as np
 import os
 from episode import Episode
 import torch
+from torch.distributions import Categorical
 
 class Agent():
     def __init__(self, env, observation_shape, num_actions):
@@ -44,14 +44,15 @@ class Agent():
         self.algo.fit(self.episodes[-1], bs=128)
 
         indexes = np.random.choice(len(self.episodes), size=2, replace=False)
-        episodes = np.array(list(self.episodes))[indexes]
-        for episode in episodes:
-            self.algo.fit(episode, bs=128)
+        for index in indexes:
+            self.algo.fit(self.episodes[index], bs=128)
     
     def step(self, state):
         action_probs = self.algo.eval(state).double()[0]
         action_probs = action_probs/action_probs.sum()
-        action = np.random.choice(range(self.num_actions), p=action_probs)
+        # action = np.random.choice(range(self.num_actions), p=action_probs)
+        dist = Categorical(action_probs)
+        action = dist.sample()
         
         new_state, reward, done, info = self.env.step(action)
         # print(f"info: {info}, num_steps: {self.num_steps}, reward: {reward}, done: {done}")
