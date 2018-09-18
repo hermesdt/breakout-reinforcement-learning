@@ -16,7 +16,7 @@ def resize(frame, output_shape):
 
 class Environment():
     def __init__(self, image_size = [80, 80]):
-        self.env = gym.make("Breakout-v4")
+        self.env = gym.make("BreakoutDeterministic-v4")
         self.image_size = image_size
         self.last_frame = self.env.reset()
         self.last_info = None
@@ -52,7 +52,7 @@ class Environment():
         
         if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
             done = True
-            reward = -0.5
+            reward = -0.1
 
             
         self.last_frame = frame

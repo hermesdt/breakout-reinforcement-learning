@@ -6,32 +6,27 @@ import math
 class Actor(nn.Module):
     def __init__(self, observation_shape, num_actions, lr=0.001):
         super().__init__()
-        self.linear1 = nn.Linear(observation_shape, 256)
-        self.sigmoid1 = nn.Sigmoid()
+        self.conv1 = nn.Conv2d(2, 32, 3, 2)
+        self.conv2 = nn.Conv2d(32, 16, 3, 2)
+        self.linear1 = nn.Linear(31824, 256)
         self.linear2 = nn.Linear(256, num_actions)
-        self.sigmoid2 = nn.Sigmoid()
-        # self.softmax = nn.Softmax()
         
-        self.optim = torch.optim.SGD(self.parameters(), lr=lr)
+        self.optim = torch.optim.Adam(self.parameters(), lr=lr)
     
     def forward(self, input):
         bs = input.size(0)
-        x = input.view(bs, -1)
-        x = self.linear1(x)
-        x = self.sigmoid1(x)
-        x = self.linear2(x)
-        #print(x)
-        x = self.sigmoid2(x)
-        #print(x)
-        # x = self.softmax(x)
-        x = nn.functional.gumbel_softmax(x, tau=0.7)
-        #print(x)
+        x = nn.functional.relu(self.conv1(input))
+        x = nn.functional.relu(self.conv2(x))
+        x = x.view(bs, -1)
+        x = nn.functional.relu(self.linear1(x))
+        x = nn.functional.relu(self.linear2(x))
+
+        x = nn.functional.gumbel_softmax(x, tau=1)
         return x
     
     def train(self, data, td_error):
         (states, actions, rewards, new_states, dones) = data
         self.optim.zero_grad()
-        # loss = self.criterion(self.forward(torch.Tensor(states)), targets)
         x = torch.Tensor(states)
         
         values = self.forward(x)[:,actions.max(1)]
@@ -43,24 +38,23 @@ class Critic(nn.Module):
     def __init__(self, observation_shape, num_actions,
                 lr=0.001):
         super().__init__()
-        self.linear1 = nn.Linear(observation_shape, 256)
-        self.sigmoid1 = nn.Sigmoid()
+        self.conv1 = nn.Conv2d(2, 32, 3, 2)
+        self.conv2 = nn.Conv2d(32, 16, 3, 2)
+        self.linear1 = nn.Linear(31824, 256)
         self.linear2 = nn.Linear(256, 1)
-        self.nonlinearity = nn.ReLU()
         
-        self.optim = torch.optim.SGD(self.parameters(), lr=lr)
+        self.optim = torch.optim.Adam(self.parameters(), lr=lr)
     
     def forward(self, input):
+        x = nn.functional.relu(self.conv1(input))
+        x = nn.functional.relu(self.conv2(x))
         bs = input.size(0)
-        x = input.view(bs, -1)
-        x = self.linear1(x)
-        x = self.sigmoid1(x)
-        x = self.linear2(x)
-        print(x)
-        x = self.nonlinearity(x)
+        x = x.view(bs, -1)
+        x = nn.functional.relu(self.linear1(x))
+        x = nn.functional.relu(self.linear2(x))
         return x
     
-    def train(self, data, gamma=0.96, n_step=4):
+    def train(self, data, gamma=0.99, n_step=16):
         (states, actions, rewards, new_states, dones) = data
         x = torch.Tensor(states)
 
@@ -78,12 +72,12 @@ class Critic(nn.Module):
         return td_error
 
 class PPO():
-    def __init__(self, observation_shape, num_actions, gamma=0.96, n_steps=4):
+    def __init__(self, observation_shape, num_actions, gamma=0.99, n_steps=16):
         self.num_actions = num_actions
         self.gamma = gamma
         self.n_steps = n_steps
-        self.actor = Actor(observation_shape, num_actions, lr=0.001)
-        self.critic = Critic(observation_shape, num_actions, lr=0.001)
+        self.actor = Actor(observation_shape, num_actions, lr=0.00025)
+        self.critic = Critic(observation_shape, num_actions, lr=0.00025)
         self.epsilon = 0.2
     
     def eval(self, state):

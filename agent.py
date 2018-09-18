@@ -10,23 +10,23 @@ class Agent():
         self.num_actions = num_actions
         self.algo = PPO(observation_shape, num_actions)
         if os.path.exists("actor_weights"):
-            self.algo.actor.load_state_dict(torch.load("actor_weights"))
+            self.algo.actor.load_state_dict(torch.load("actor_weights", map_location='cpu'))
         if os.path.exists("critic_weights"):
-            self.algo.critic.load_state_dict(torch.load("critic_weights"))
+            self.algo.critic.load_state_dict(torch.load("critic_weights", map_location='cpu'))
         self.num_steps = 0
         self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.episodes = deque([Episode()], maxlen=100)
+        self.episodes = deque([Episode()], maxlen=500)
         self.total_reward = 0
     
     def reset(self):
-        print("Total reward:", self.total_reward, "Num steps:", self.num_steps)
+        print("Total reward:", self.total_reward, "Num steps:", self.num_steps, flush=True)
         self.num_steps = 0
         self.total_reward = 0
         self.num_episodes += 1
 
-        if self.num_episodes % 20 == 0:
+        if self.num_episodes % 5000 == 0 and len(self.episodes) >= 50:
             print("learning started")
             self.learn_from_memory()
             torch.save(self.algo.actor.state_dict(), "actor_weights")
