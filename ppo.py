@@ -7,12 +7,12 @@ from torch.distributions import Categorical
 class Actor(nn.Module):
     def __init__(self, observation_shape, num_actions, lr=0.001):
         super().__init__()
-        self.conv1 = nn.Conv2d(2, 32, 3, 2)
-        self.conv2 = nn.Conv2d(32, 16, 3, 2)
-        self.linear1 = nn.Linear(5776, 256)
+        self.conv1 = nn.Conv2d(2, 16, 8, 4)
+        self.conv2 = nn.Conv2d(16, 32, 4, 2)
+        self.linear1 = nn.Linear(2048, 256)
         self.linear2 = nn.Linear(256, num_actions)
         
-        self.optim = torch.optim.SGD(self.parameters(), lr=lr)
+        self.optim = torch.optim.Adam(self.parameters(), lr=lr)
     
     def forward(self, input):
         bs = input.size(0)
@@ -23,7 +23,7 @@ class Actor(nn.Module):
         x = nn.functional.leaky_relu(self.linear2(x))
         #print("pre gumbel", x)
         x = nn.functional.softmax(x)
-        # print("post gumbel", x)
+        print("post gumbel", x)
         return x
     
     def train(self, data, td_error):
@@ -33,7 +33,9 @@ class Actor(nn.Module):
         td_error = td_error.detach()
         td_error.requires_grad=False
 
-        #values = self.forward(x)[:,actions]*td_error
+        # values = self.forward(x)[:,actions]*td_error
+
+
         dist = Categorical(self.forward(x))
         log_probs = -dist.log_prob(torch.Tensor(actions))*td_error
         loss = log_probs.sum()
@@ -45,12 +47,12 @@ class Critic(nn.Module):
     def __init__(self, observation_shape, num_actions,
                 lr=0.001):
         super().__init__()
-        self.conv1 = nn.Conv2d(2, 32, 3, 2)
-        self.conv2 = nn.Conv2d(32, 16, 3, 2)
-        self.linear1 = nn.Linear(5776, 256)
+        self.conv1 = nn.Conv2d(2, 16, 8, 4)
+        self.conv2 = nn.Conv2d(16, 32, 4, 2)
+        self.linear1 = nn.Linear(2048, 256)
         self.linear2 = nn.Linear(256, 1)
         
-        self.optim = torch.optim.SGD(self.parameters(), lr=lr)
+        self.optim = torch.optim.Adam(self.parameters(), lr=lr)
     
     def forward(self, input):
         x = nn.functional.leaky_relu(self.conv1(input))
@@ -72,6 +74,15 @@ class Critic(nn.Module):
         # import pdb; pdb.set_trace()
         
         td_error = y - y_hat
+
+        #print(td_error)
+        #print("y", y)
+        #print("y", y_hat)
+        # import pdb; pdb.set_trace()
+        #s = torch.stack([torch.Tensor(rewards).view(-1, 1), y, y_hat,
+        #    td_error]).view(4, len(rewards)).permute(1, 0)
+            # x.permute()
+        #print(s)
         
         self.optim.zero_grad()
         td_error.pow(2).sum().backward()

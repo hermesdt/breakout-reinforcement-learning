@@ -49,11 +49,11 @@ class Environment():
         frame, reward, done, info = self.env.step(action)
         self.frames.append(frame)
         state = self.build_state()
-        reward = max(1, reward)
+        reward = min(1, reward)
         
         if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
             done = True
-            # reward = -1
+            reward = -1
 
             
         self.last_frame = frame

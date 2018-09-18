@@ -1,5 +1,6 @@
 from collections import deque
 import numpy as np
+import random
 from ppo import PPO
 import os
 from episode import Episode
@@ -20,9 +21,11 @@ class Agent():
         self.env = env
         self.episodes = deque([Episode()], maxlen=50)
         self.total_reward = 0
+        self.epsilon = 1
     
     def reset(self, learn=True):
-        print("Total reward:", self.total_reward, "Num steps:", self.num_steps, flush=True)
+        print("Total reward:", self.total_reward, "Num steps:", self.num_steps,
+            "epsilon:", self.epsilon, flush=True)
         self.num_steps = 0
         self.total_reward = 0
         self.num_episodes += 1
@@ -41,16 +44,19 @@ class Agent():
         self.episodes[-1].store_step(state, action, reward, new_state, done)
     
     def learn_from_memory(self):
-        self.algo.fit(self.episodes[-1], bs=128)
+        self.algo.fit(self.episodes[-1], bs=32)
 
         indexes = np.random.choice(len(self.episodes), size=2, replace=False)
         for index in indexes:
-            self.algo.fit(self.episodes[index], bs=128)
+            self.algo.fit(self.episodes[index], bs=32)
     
     def step(self, state):
         action_probs = self.algo.eval(state).double()[0]
         action_probs = action_probs/action_probs.sum()
-        # action = np.random.choice(range(self.num_actions), p=action_probs)
+        #if random.random() < self.epsilon:
+        #    action = random.randint(0, self.num_actions - 1)
+        #else:
+        #    action = action_probs.max(0)[1]
         dist = Categorical(action_probs)
         action = dist.sample()
         
@@ -62,6 +68,8 @@ class Agent():
         self.num_steps += 1
         self.total_num_steps += 1
         self.total_reward += reward
+        self.epsilon -= 1e-05
+        self.epsilon = max(0.1, self.epsilon)
         
         return new_state, done
         
