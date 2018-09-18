@@ -18,7 +18,7 @@ class Agent():
         self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.episodes = deque([Episode()], maxlen=20)
+        self.episodes = deque([Episode()], maxlen=50)
         self.total_reward = 0
     
     def reset(self, learn=True):
@@ -43,7 +43,7 @@ class Agent():
     def learn_from_memory(self):
         self.algo.fit(self.episodes[-1], bs=128)
 
-        indexes = np.random.choice(len(self.episodes), size=3, replace=False)
+        indexes = np.random.choice(len(self.episodes), size=2, replace=False)
         episodes = np.array(list(self.episodes))[indexes]
         for episode in episodes:
             self.algo.fit(episode, bs=128)

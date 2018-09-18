@@ -52,7 +52,7 @@ class Environment():
         
         if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
             done = True
-            # reward = -0.1
+            reward = -0.1
 
             
         self.last_frame = frame

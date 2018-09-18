@@ -15,13 +15,13 @@ class Actor(nn.Module):
     
     def forward(self, input):
         bs = input.size(0)
-        x = nn.functional.sigmoid(self.conv1(input))
-        x = nn.functional.sigmoid(self.conv2(x))
+        x = nn.functional.relu(self.conv1(input))
+        x = nn.functional.relu(self.conv2(x))
         x = x.view(bs, -1)
-        x = nn.functional.sigmoid(self.linear1(x))
-        x = nn.functional.sigmoid(self.linear2(x))
+        x = nn.functional.relu(self.linear1(x))
+        x = nn.functional.relu(self.linear2(x))
         #print("pre gumbel", x)
-        x = nn.functional.gumbel_softmax(x, tau=0.9)
+        x = nn.functional.softmax(x)
         #print("post gumbel", x)
         return x
     
@@ -30,7 +30,7 @@ class Actor(nn.Module):
         self.optim.zero_grad()
         x = torch.Tensor(states)
         
-        values = self.forward(x)[:,actions.max(1)]
+        values = self.forward(x)[:,actions]
         loss = torch.log(values).sum()
         loss.backward()
         self.optim.step()
@@ -47,11 +47,11 @@ class Critic(nn.Module):
         self.optim = torch.optim.RMSprop(self.parameters(), lr=lr)
     
     def forward(self, input):
-        x = nn.functional.sigmoid(self.conv1(input))
-        x = nn.functional.sigmoid(self.conv2(x))
+        x = nn.functional.relu(self.conv1(input))
+        x = nn.functional.relu(self.conv2(x))
         bs = input.size(0)
         x = x.view(bs, -1)
-        x = nn.functional.sigmoid(self.linear1(x))
+        x = nn.functional.relu(self.linear1(x))
         x = self.linear2(x)
         return x
     
@@ -89,27 +89,10 @@ class PPO():
         
         return probs
     
-    def fit(self, episode, bs=32):
-        states, actions, rewards, new_states, dones = [], [], [], [], []
-        
-        for idx, (state, action, reward, new_state, done) in enumerate(episode):
-            states.append(state)
-            oh_action = [1 if i == action else 0 for i in range(self.num_actions)]
-            actions.append(oh_action)
-            rewards.append(reward)
-            new_states.append(new_state)
-            dones.append(done)
-        
-        states = np.array(states).reshape([len(states), *states[0].shape[1:]])
-        actions = np.array(actions)
-        rewards = np.array(rewards)
-        new_states = np.array(new_states).reshape([len(new_states), *new_states[0].shape[1:]])
-        
-        data = (states, actions, rewards, new_states, dones)
-
-        for b in range(math.ceil(len(data)/bs)):
-            td_error = self.critic.train(data[b:b+bs])
-            self.actor.train(data, td_error)
+    def fit(self, episode, bs=64):
+        for b in range(math.ceil(len(episode)/bs)):
+            td_error = self.critic.train(episode[b:b+bs])
+            self.actor.train(episode[b:b+bs], td_error)
         
         
 # env = Environment()
