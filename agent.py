@@ -1,4 +1,5 @@
 from collections import deque
+import numpy as np
 from ppo import PPO
 import numpy as np
 import os
@@ -17,16 +18,16 @@ class Agent():
         self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.episodes = deque([Episode()], maxlen=500)
+        self.episodes = deque([Episode()], maxlen=20)
         self.total_reward = 0
     
-    def reset(self):
+    def reset(self, learn=True):
         print("Total reward:", self.total_reward, "Num steps:", self.num_steps, flush=True)
         self.num_steps = 0
         self.total_reward = 0
         self.num_episodes += 1
 
-        if self.num_episodes % 5000 == 0 and len(self.episodes) >= 50:
+        if len(self.episodes) >= 5 and learn:
             print("learning started")
             self.learn_from_memory()
             torch.save(self.algo.actor.state_dict(), "actor_weights")
@@ -40,7 +41,11 @@ class Agent():
         self.episodes[-1].store_step(state, action, reward, new_state, done)
     
     def learn_from_memory(self):
-        for episode in self.episodes:
+        self.algo.fit(self.episodes[-1], bs=128)
+
+        indexes = np.random.choice(len(self.episodes), size=3, replace=False)
+        episodes = np.array(list(self.episodes))[indexes]
+        for episode in episodes:
             self.algo.fit(episode, bs=128)
     
     def step(self, state):

@@ -12,7 +12,7 @@ def rgb2grey(frame):
     return skimage.color.rgb2grey(frame)
 
 def resize(frame, output_shape):
-    return skresize(frame, output_shape)
+    return skresize(frame, output_shape, anti_aliasing=True)
 
 class Environment():
     def __init__(self, image_size = [80, 80]):
@@ -38,7 +38,7 @@ class Environment():
     def build_state(self):
         state = np.zeros([1, 2, *self.image_size], dtype=np.float)
         for idx, frame in enumerate(list(self.frames)):
-            state[0, idx] = rgb2grey(resize(frame, self.image_size))
+            state[0, idx] = rgb2grey(resize(frame[50:], self.image_size))
         #s = np.stack([
         #    rgb2grey(resize(frame1, self.image_size)),
         #    rgb2grey(resize(frame2, self.image_size))
@@ -52,7 +52,7 @@ class Environment():
         
         if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
             done = True
-            reward = -0.1
+            # reward = -0.1
 
             
         self.last_frame = frame

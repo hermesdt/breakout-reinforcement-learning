@@ -5,7 +5,7 @@ class Runner():
         self.env = env
         self.agent = Agent(env, observation_shape, num_actions)
     
-    def run(self, episodes=10, render=False):
+    def run(self, episodes=10, render=False, learn=True):
         done = False
         state = self.env.reset()
         
@@ -15,7 +15,7 @@ class Runner():
                 if render:
                     self.env.render()
             
-            self.agent.reset()
+            self.agent.reset(learn=learn)
             state = self.env.reset()
             
             done = False

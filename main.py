@@ -7,7 +7,7 @@ from runner import Runner
 
 env = gym.make("BreakoutDeterministic-v4")
 num_actions = env.action_space.n
-image_size = [210, 160]
+image_size = [80, 80]
 
 rows, cols, channels = env.observation_space.shape
 print("frame shape:", (rows, cols, channels))
@@ -19,14 +19,15 @@ env = Environment(image_size=image_size)
 runner = Runner(env, observation_shape, num_actions)
 
 while True:
-    runner.run(episodes=20, render=False)
-    runner.run(episodes=20, render=False)
+    runner.run(episodes=20, render=True, learn=False)
+    runner.run(episodes=20, render=True, learn=False)
 
-    runner.run(episodes=20, render=False)
-    runner.run(episodes=20, render=False)
+    runner.run(episodes=20, render=True, learn=False)
+    runner.run(episodes=20, render=True, learn=False)
 
-    runner.run(episodes=20, render=False)
-    runner.run(episodes=20, render=False)
+    runner.run(episodes=20, render=True, learn=False)
+    runner.run(episodes=20, render=True, learn=False)
 
-    runner.run(episodes=20, render=False)
-    runner.run(episodes=20, render=False)
+    runner.run(episodes=20, render=True, learn=False)
+    runner.run(episodes=20, render=True, learn=False)
+ 
