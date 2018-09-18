@@ -41,11 +41,11 @@ class Agent():
         self.episodes[-1].store_step(state, action, reward, new_state, done)
     
     def learn_from_memory(self):
-        self.algo.fit(self.episodes[-1], bs=128)
+        self.algo.fit(self.episodes[-1], bs=32)
 
         indexes = np.random.choice(len(self.episodes), size=2, replace=False)
         for index in indexes:
-            self.algo.fit(self.episodes[index], bs=128)
+            self.algo.fit(self.episodes[index], bs=32)
     
     def step(self, state):
         action_probs = self.algo.eval(state).double()[0]

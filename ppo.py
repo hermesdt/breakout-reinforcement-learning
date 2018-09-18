@@ -12,7 +12,7 @@ class Actor(nn.Module):
         self.linear1 = nn.Linear(5776, 256)
         self.linear2 = nn.Linear(256, num_actions)
         
-        self.optim = torch.optim.SGD(self.parameters(), lr=lr)
+        self.optim = torch.optim.Adam(self.parameters(), lr=lr)
     
     def forward(self, input):
         bs = input.size(0)
@@ -21,9 +21,9 @@ class Actor(nn.Module):
         x = x.view(bs, -1)
         x = nn.functional.leaky_relu(self.linear1(x))
         x = nn.functional.leaky_relu(self.linear2(x))
-        #print("pre gumbel", x)
+        print("pre gumbel", x)
         x = nn.functional.softmax(x)
-        # print("post gumbel", x)
+        print("post gumbel", x)
         return x
     
     def train(self, data, td_error):
@@ -50,7 +50,7 @@ class Critic(nn.Module):
         self.linear1 = nn.Linear(5776, 256)
         self.linear2 = nn.Linear(256, 1)
         
-        self.optim = torch.optim.SGD(self.parameters(), lr=lr)
+        self.optim = torch.optim.Adam(self.parameters(), lr=lr)
     
     def forward(self, input):
         x = nn.functional.leaky_relu(self.conv1(input))
