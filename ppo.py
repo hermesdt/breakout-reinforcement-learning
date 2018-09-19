@@ -96,6 +96,12 @@ class PPO():
         self.gamma = gamma
         self.actor = Actor(observation_shape, num_actions, lr=0.00005)
         self.critic = Critic(observation_shape, num_actions, lr=0.00005)
+
+        if os.path.exists("actor_weights"):
+            self.actor.load_state_dict(torch.load("actor_weights", map_location='cpu'))
+        if os.path.exists("critic_weights"):
+            self.critic.load_state_dict(torch.load("critic_weights", map_location='cpu'))
+
         self.epsilon = 0.2
     
     def eval(self, state):
@@ -109,3 +115,7 @@ class PPO():
         for b in range(math.ceil(len(episode)/bs)):
             td_error = self.critic.train(episode[b:b+bs])
             self.actor.train(episode[b:b+bs], td_error)
+
+    def save(self):
+        torch.save(self.actor.state_dict(), "actor_weights")
+        torch.save(self.critic.state_dict(), "critic_weights")

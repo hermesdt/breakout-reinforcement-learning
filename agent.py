@@ -2,6 +2,7 @@ from collections import deque
 import numpy as np
 import random
 from ppo import PPO
+from dqn import DQN
 import os
 from episode import Episode
 import torch
@@ -10,18 +11,16 @@ from torch.distributions import Categorical
 class Agent():
     def __init__(self, env, observation_shape, num_actions):
         self.num_actions = num_actions
-        self.algo = PPO(observation_shape, num_actions)
-        if os.path.exists("actor_weights"):
-            self.algo.actor.load_state_dict(torch.load("actor_weights", map_location='cpu'))
-        if os.path.exists("critic_weights"):
-            self.algo.critic.load_state_dict(torch.load("critic_weights", map_location='cpu'))
+        target_dqn = DQN(observation_shape, num_actions)
+        self.algo = DQN(observation_shape, num_actions, target_dqn=target_dqn)
+
         self.num_steps = 0
         self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.episodes = deque([Episode()], maxlen=50)
+        self.episodes = deque([Episode()], maxlen=200)
         self.total_reward = 0
-        self.epsilon = 1
+        self.epsilon = 0.5
     
     def reset(self, learn=True):
         print("Total reward:", self.total_reward, "Num steps:", self.num_steps,
@@ -30,11 +29,10 @@ class Agent():
         self.total_reward = 0
         self.num_episodes += 1
 
-        if len(self.episodes) >= 5 and learn:
+        if len(self.episodes) >= 50 and learn:
             print("learning started")
             self.learn_from_memory()
-            torch.save(self.algo.actor.state_dict(), "actor_weights")
-            torch.save(self.algo.critic.state_dict(), "critic_weights")
+            self.algo.save()
             print("finished learning")
 
         self.episodes.append(Episode())
@@ -53,12 +51,13 @@ class Agent():
     def step(self, state):
         action_probs = self.algo.eval(state).double()[0]
         action_probs = action_probs/action_probs.sum()
-        #if random.random() < self.epsilon:
-        #    action = random.randint(0, self.num_actions - 1)
-        #else:
-        #    action = action_probs.max(0)[1]
-        dist = Categorical(action_probs)
-        action = dist.sample()
+        if random.random() < self.epsilon:
+           action = random.randint(0, self.num_actions - 1)
+        else:
+           action = action_probs.max(0)[1]
+
+        # dist = Categorical(action_probs)
+        # action = dist.sample()
         
         new_state, reward, done, info = self.env.step(action)
         # print(f"info: {info}, num_steps: {self.num_steps}, reward: {reward}, done: {done}")

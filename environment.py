@@ -20,7 +20,7 @@ class Environment():
         self.image_size = image_size
         self.last_frame = self.env.reset()
         self.last_info = None
-        self.frames = deque(maxlen=2)
+        self.frames = deque(maxlen=4)
     
     def reset(self):
         self.frames.clear()
@@ -36,7 +36,7 @@ class Environment():
         self.env.render()
     
     def build_state(self):
-        state = np.zeros([1, 2, *self.image_size], dtype=np.float)
+        state = np.zeros([1, self.frames.maxlen, *self.image_size], dtype=np.float)
         for idx, frame in enumerate(list(self.frames)):
             state[0, idx] = rgb2grey(resize(frame[50:], self.image_size))
         #s = np.stack([
@@ -53,7 +53,7 @@ class Environment():
         
         if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
             done = True
-            reward = -1
+            # reward = -1
 
             
         self.last_frame = frame
