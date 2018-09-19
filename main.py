@@ -5,7 +5,7 @@ import numpy as np
 from environment import Environment
 from runner import Runner
 
-env = gym.make("BreakoutDeterministic-v4")
+env = gym.make("PongDeterministic-v4")
 num_actions = env.action_space.n
 image_size = [80, 80]
 
@@ -19,4 +19,4 @@ env = Environment(image_size=image_size)
 runner = Runner(env, observation_shape, num_actions)
 
 while True:
-    runner.run(episodes=20, render=True, learn=True)
+    runner.run(episodes=20, render=False, learn=True)

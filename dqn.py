@@ -41,14 +41,14 @@ class DQN(nn.Module):
         return self.forward(torch.Tensor(state))
     
     def train(self, data):
-        (states, actions, rewards, new_states, dones) = data
+        (states, actions, rewards, new_states, dones, steps) = data
         bs = len(states)
 
         self.optim.zero_grad()
         y_hat = self.eval(states)[range(len(actions)),actions]
         v_h = self.target_dqn.eval(torch.Tensor(new_states)).max(1)[0]
         v_h[np.argwhere(dones)] = 0
-        y = torch.Tensor(rewards.reshape(bs, -1)) + self.gamma*v_h
+        y = torch.Tensor(rewards.reshape(bs, -1)) + (self.gamma**torch.Tensor(steps))*v_h
 
         # loss = (y - y_hat).pow(2).sum()
         loss = self.criterion(y_hat, y)

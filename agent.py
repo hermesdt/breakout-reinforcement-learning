@@ -18,9 +18,9 @@ class Agent():
         self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.episodes = deque([Episode()], maxlen=200)
+        self.episodes = deque([Episode()], maxlen=500)
         self.total_reward = 0
-        self.epsilon = 0.5
+        self.epsilon = 0.32
     
     def reset(self, learn=True):
         print("Total reward:", self.total_reward, "Num steps:", self.num_steps,
@@ -67,7 +67,7 @@ class Agent():
         self.num_steps += 1
         self.total_num_steps += 1
         self.total_reward += reward
-        self.epsilon -= 1e-05
+        self.epsilon -= 5e-06
         self.epsilon = max(0.1, self.epsilon)
         
         return new_state, done

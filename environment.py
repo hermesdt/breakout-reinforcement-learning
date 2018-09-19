@@ -16,7 +16,7 @@ def resize(frame, output_shape):
 
 class Environment():
     def __init__(self, image_size = [80, 80]):
-        self.env = gym.make("BreakoutDeterministic-v4")
+        self.env = gym.make("PongDeterministic-v4")
         self.image_size = image_size
         self.last_frame = self.env.reset()
         self.last_info = None
@@ -50,10 +50,13 @@ class Environment():
         self.frames.append(frame)
         state = self.build_state()
         reward = min(1, reward)
-        
-        if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
+
+        # if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
+        if reward == -1:
             done = True
             # reward = -1
+        else:
+            reward = max(0.1, reward)
 
             
         self.last_frame = frame
