@@ -5,6 +5,14 @@ class Episode():
         self.memory = []
         self._processed_data = None
     
+    @property
+    def win(self):
+        return self.memory[-1][2] == 1
+    
+    @property
+    def num_steps(self):
+        return len(self.memory)
+    
     def store_step(self, state, action, reward, new_state, done):
         self.memory.append((state, action, reward, new_state, done))
 
