@@ -38,7 +38,7 @@ class Environment():
     def build_state(self):
         state = np.zeros([1, self.frames.maxlen, *self.image_size], dtype=np.float)
         for idx, frame in enumerate(list(self.frames)):
-            state[0, idx] = rgb2grey(resize(frame[50:], self.image_size))
+            state[0, idx] = rgb2grey(resize(frame[30:], self.image_size))
         #s = np.stack([
         #    rgb2grey(resize(frame1, self.image_size)),
         #    rgb2grey(resize(frame2, self.image_size))
@@ -49,14 +49,14 @@ class Environment():
         frame, reward, done, info = self.env.step(action)
         self.frames.append(frame)
         state = self.build_state()
-        reward = min(1, reward)
+        # reward = min(1, reward)
 
         # if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
         if reward == -1:
             done = True
             # reward = -1
-        else:
-            reward = max(0.1, reward)
+        # else:
+            # reward = max(0.1, reward)
 
             
         self.last_frame = frame
