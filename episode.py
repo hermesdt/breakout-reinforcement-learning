@@ -27,29 +27,57 @@ class Episode():
         return len(self.memory)
 
     def __getitem__(self, key):
-        if self._processed_data is None:
-            self._process_data()
-        
-        return [d[key] for d in self._processed_data]
+        return [d[key] for d in self._process_data()]
     
+    def data(self):
+        return self._process_data()
+
+
     def _process_data(self):
+        if self._processed_data is not None:
+            return self._processed_data
+
         states, actions, rewards, new_states, dones, steps = [], [], [], [], [], []
-        n_steps = 8
+        n = 4
         gamma = 0.99
+        self._processed_data = []
         
         for idx, (state, action, reward, new_state, done) in enumerate(self.memory):
-            states.append(state)
-            actions.append(action)
-            new_states.append(self.memory[min(idx + n_steps, len(self.memory) - 1)][3])
-            dones.append(done)
+            s = state
+            a = action
+            n_s = self.memory[min(idx + n, len(self.memory) - 1)][3]
+            d = done
 
-            R = 0
-            for step in range(n_steps):
-                reward = self.memory[min(idx + step, len(self.memory) - 1)][2]
-                R = reward + gamma * R
-            
-            rewards.append(R)
-            steps.append(step + 1)
+            T = len(self.memory)
+            t = 0
+            tau = t - n + 1
+            G = 0
+
+            while True:
+                # import pudb; pudb.set_trace()
+                tau = t - n + 1
+
+                if tau >= 0:
+
+                    i = tau
+                    while True:    
+                        G += gamma**(i - tau) *self. memory[i][2]
+                        i += 1
+                        if i >= min(tau + n, T): break
+
+                    # print(f"final G {G}, tau {tau}, t{t}", "next gamma", n)
+                t += 1
+
+                if tau == T - 1: break
+        
+            states.append(s)
+            actions.append(a)
+            rewards.append(G)
+            new_states.append(n_s)
+            dones.append(d)
+            steps.append(n)
+
+            # self._processed_data.append((s, a, G, n_s, d, n))
         
         states = np.array(states).reshape([len(states), *states[0].shape[1:]])
         actions = np.array(actions)
@@ -59,3 +87,4 @@ class Episode():
         new_states = np.array(new_states).reshape([len(new_states), *new_states[0].shape[1:]])
         
         self._processed_data = (states, actions, rewards, new_states, dones, steps)
+        return self._processed_data

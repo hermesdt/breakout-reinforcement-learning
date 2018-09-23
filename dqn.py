@@ -5,7 +5,7 @@ import math, os, re
 from collections import OrderedDict
 
 class DQN(nn.Module):
-    def __init__(self, observation_shape, num_actions, gamma=0.99, lr=0.0001, target_dqn=None):
+    def __init__(self, observation_shape, num_actions, gamma=0.99, lr=0.001, target_dqn=None):
         super().__init__()
 
         self.lr = lr
@@ -47,7 +47,7 @@ class DQN(nn.Module):
         self.optim.zero_grad()
         y_hat = self.eval(states)[range(len(actions)),actions]
         v_h = self.target_dqn.eval(torch.Tensor(new_states)).max(1)[0]
-        v_h[np.argwhere(dones)] = 0
+        v_h[np.argwhere(dones).reshape(-1)] = 0
         y = torch.Tensor(rewards.reshape(bs, -1)) + (self.gamma**torch.Tensor(steps))*v_h
 
         # loss = (y - y_hat).pow(2).sum()
@@ -58,7 +58,7 @@ class DQN(nn.Module):
         self.optim.step()
         self.num_iterations += 1
 
-        if self.num_iterations % 100 == 0:
+        if self.num_iterations % 1000 == 0:
             state_dict = self.state_dict().copy()
             for key in self.state_dict().keys():
                 if re.match(r"target_dqn", key):
@@ -66,9 +66,9 @@ class DQN(nn.Module):
 
             self.target_dqn.load_state_dict(state_dict)
     
-    def fit(self, episode, bs=64):
-        for b in range(math.ceil(len(episode)/bs)):
-            self.train(episode[b:b+bs])
+    # def fit(self, episode, bs=64):
+    #     for b in range(math.ceil(len(episode)/bs)):
+    #         self.train(episode[b:b+bs])
 
     def save(self):
         torch.save(self.state_dict(), "dqn_weights")
