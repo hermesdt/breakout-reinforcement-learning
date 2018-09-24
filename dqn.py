@@ -5,7 +5,7 @@ import math, os, re
 from collections import OrderedDict
 
 class DQN(nn.Module):
-    def __init__(self, observation_shape, num_actions, gamma=0.99, lr=0.001, target_dqn=None):
+    def __init__(self, observation_shape, num_actions, gamma=0.99, lr=0.0001, target_dqn=None):
         super().__init__()
 
         self.lr = lr
@@ -19,7 +19,7 @@ class DQN(nn.Module):
         self.linear1 = nn.Linear(2048, 256)
         self.linear2 = nn.Linear(256, num_actions)
         
-        self.optim = torch.optim.Adam(self.parameters(), lr=lr)
+        self.optim = torch.optim.RMSprop(self.parameters(), lr=lr)
         self.criterion = torch.nn.MSELoss()
 
         if os.path.exists("dqn_weights") and self.target_dqn is not None:

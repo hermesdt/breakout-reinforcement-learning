@@ -19,16 +19,16 @@ class Agent():
         self.num_episodes = 0
         self.total_num_steps = 0
         self.env = env
-        self.memory = Memory(maxlen=1000)
+        self.memory = Memory(maxlen=10000)
         self.episode = Episode()
         self.total_reward = 0
-        self.epsilon = 0.32
+        self.epsilon = 0.20
     
     def reset(self, learn=True):
         print("Total reward:", self.total_reward, "Num steps:", self.num_steps,
             "epsilon:", self.epsilon, flush=True)
 
-        if len(self.memory) >= 100 and learn:
+        if len(self.memory) >= 200 and learn:
             print("learning started")
             self.learn_from_memory()
             self.algo.save()
@@ -43,7 +43,7 @@ class Agent():
         self.episode = Episode()
     
     def learn_from_memory(self):
-        for _batch_id in range(self.num_steps):
+        for _batch_id in range(min(self.num_steps, 10)):
             self.algo.train(self.memory.get_batch(batch_size=32))
     
     def step(self, state):
@@ -69,7 +69,7 @@ class Agent():
         self.num_steps += 1
         self.total_num_steps += 1
         self.total_reward += reward
-        self.epsilon -= 5e-06
+        self.epsilon -= 1e-05
         self.epsilon = max(0.1, self.epsilon)
         
         return new_state, done

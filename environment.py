@@ -52,7 +52,7 @@ class Environment():
         # reward = min(1, reward)
 
         # if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
-        if reward == -1:
+        if reward == -1 or reward == 1:
             done = True
             # reward = -1
         # else:

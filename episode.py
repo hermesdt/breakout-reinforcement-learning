@@ -38,37 +38,22 @@ class Episode():
             return self._processed_data
 
         states, actions, rewards, new_states, dones, steps = [], [], [], [], [], []
-        n = 4
+        n = 8
         gamma = 0.99
         self._processed_data = []
         
+        #import pudb; pudb.set_trace()
         for idx, (state, action, reward, new_state, done) in enumerate(self.memory):
             s = state
             a = action
             n_s = self.memory[min(idx + n, len(self.memory) - 1)][3]
             d = done
-
-            T = len(self.memory)
-            t = 0
-            tau = t - n + 1
             G = 0
 
-            while True:
-                # import pudb; pudb.set_trace()
-                tau = t - n + 1
-
-                if tau >= 0:
-
-                    i = tau
-                    while True:    
-                        G += gamma**(i - tau) *self. memory[i][2]
-                        i += 1
-                        if i >= min(tau + n, T): break
-
-                    # print(f"final G {G}, tau {tau}, t{t}", "next gamma", n)
-                t += 1
-
-                if tau == T - 1: break
+            # remaining = min(len(self.memory) - n, )
+            for i,offset in enumerate(range(idx, min(len(self.memory), idx+n))):
+                G += (gamma**i) * self.memory[offset][2]
+                
         
             states.append(s)
             actions.append(a)
@@ -76,6 +61,7 @@ class Episode():
             new_states.append(n_s)
             dones.append(d)
             steps.append(n)
+            # print("G", G, "idx", idx)
 
             # self._processed_data.append((s, a, G, n_s, d, n))
         
