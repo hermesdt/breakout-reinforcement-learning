@@ -10,7 +10,7 @@ print("frame shape:", env.observation_space.shape)#.reshape(1, -1).shape
 print("action shape:", env.action_space.n)
 
 runner = Runner(env)
-runner.run(5, render=False)
-runner.run(1, render=True)
+# runner.run(5, render=False)
+runner.run(1, render=True, learn=False)
 # while True:
 #     runner.run(episodes=20, render=True, learn=True)
