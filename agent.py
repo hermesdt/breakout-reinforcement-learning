@@ -18,20 +18,17 @@ class Agent():
         self.env = env
         self.memory = Memory(maxlen=10000)
         self.rewards = deque(maxlen=100)
-        self.epsilon = 1
+        self.epsilon = 0.3
         self.total_reward = 0
     
     def reset(self, learn=True):
-        print("Total reward:", np.mean(list(deque)), "Num steps:", self.episode_steps,
-            "epsilon:", self.epsilon, flush=True)
-        
         self.total_reward = 0
     
     def store_in_memory(self, state, action, reward, new_state, done):
-        self.memory.append(state, action, reward, new_state, done)
+        self.memory.append((state, action, reward, new_state, done))
     
     def learn_from_memory(self):
-        self.algo.train(self.memory.get_batch(batch_size=32))
+       self.algo.train(self.memory.get_batch(batch_size=32))
     
     def step(self, state):
         action_probs = self.algo.eval(np.expand_dims(state, 0)).double()[0]
@@ -47,15 +44,15 @@ class Agent():
         if self.num_steps >= 100:
             self.learn_from_memory()
         
-        if reward != 0:
-            print(f"[{self.num_steps}] reward {reward}, steps {self.episode_steps}, epsilon {self.epsilon}")
+        if done:
+            print(f"[{self.num_steps}] reward {self.env.mean_reward}, steps {self.episode_steps}, speed {self.env.speed} f/s, epsilon {self.epsilon}")
             self.episode_steps = 0
         
         self.num_steps += 1
         self.episode_steps += 1
         self.total_reward += reward
 
-        self.epsilon -= 1e-05
+        self.epsilon -= 1e-04
         self.epsilon = max(0.1, self.epsilon)
         
         return new_state, reward, done, info 
