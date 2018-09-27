@@ -1,65 +1,39 @@
 import gym
-import matplotlib.pyplot as plt
-import pandas as pd
+from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 import numpy as np
-import torch
-from torch import nn
-import skimage
-from skimage.transform import resize as skresize
-from collections import deque
 
-def rgb2grey(frame):
-    return skimage.color.rgb2grey(frame)
+class ImageToPyTorch(gym.ObservationWrapper):
+    """
+    Change image shape to CWH
+    """
+    def __init__(self, env):
+        super(ImageToPyTorch, self).__init__(env)
+        old_shape = self.observation_space.shape
+        self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(old_shape[-1], old_shape[0], old_shape[1]),
+                                                dtype=np.float32)
 
-def resize(frame, output_shape):
-    return skresize(frame, output_shape, anti_aliasing=True)
+    def observation(self, observation):
+        return np.array(observation).transpose(2, 0, 1)
 
 class Environment():
-    def __init__(self, image_size = [80, 80]):
-        self.env = gym.make("PongDeterministic-v4")
-        self.image_size = image_size
-        self.last_frame = self.env.reset()
-        self.last_info = None
-        self.frames = deque(maxlen=4)
+    def __init__(self, game="PongNoFrameskip-v4"):
+        self.env = make_atari(game)
+        self.env = wrap_deepmind(self.env, frame_stack=True)
+        self.env = ImageToPyTorch(self.env)
     
-    def reset(self):
-        self.frames.clear()
-        if self.last_info and self.last_info['ale.lives'] <= 0:
-            self.frames.append(self.env.reset())
-        frame, reward, done, info = self.env.step(1)
-        self.frames.append(frame)
-        
-        state = self.build_state()
-        return state
+    @property
+    def observation_space(self):
+        return self.env.observation_space
     
+    @property
+    def action_space(self):
+        return self.env.action_space
+
     def render(self):
         self.env.render()
-    
-    def build_state(self):
-        state = np.zeros([1, self.frames.maxlen, *self.image_size], dtype=np.float)
-        for idx, frame in enumerate(list(self.frames)):
-            state[0, idx] = rgb2grey(resize(frame[30:], self.image_size))
-        #s = np.stack([
-        #    rgb2grey(resize(frame1, self.image_size)),
-        #    rgb2grey(resize(frame2, self.image_size))
-        #], axis=0).reshape([1, 2, *self.image_size])
-        return state
-    
+
+    def reset(self):
+        return self.env.reset()
+
     def step(self, action):
-        frame, reward, done, info = self.env.step(action)
-        self.frames.append(frame)
-        state = self.build_state()
-        # reward = min(1, reward)
-
-        # if self.last_info and self.last_info['ale.lives'] > info['ale.lives']:
-        if reward == -1 or reward == 1:
-            done = True
-            # reward = -1
-        # else:
-            # reward = max(0.1, reward)
-
-            
-        self.last_frame = frame
-        self.last_info = info
-        
-        return state, reward, done, info
+        return self.env.step(action)
