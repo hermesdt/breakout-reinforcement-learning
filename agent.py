@@ -36,7 +36,7 @@ class Agent():
     
     def step(self, state, learn=True):
         action_probs = self.algo.eval(np.expand_dims(state, 0)).double()[0]
-        print(action_probs)
+        # print(action_probs)
         action_probs = action_probs/action_probs.sum()
 
         if random.random() < self.epsilon:

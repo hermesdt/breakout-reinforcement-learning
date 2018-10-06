@@ -96,7 +96,9 @@ class DQNParamNoise(nn.Module):
         probs = torch.nn.functional.softmax(q_values, dim=-1)
         perturbed_probs = torch.nn.functional.softmax(q_perturbed_values, dim=-1)
         
-        distance = nn.functional.kl_div(probs, perturbed_probs)
+        distance = (probs * (torch.log(probs) - torch.log(perturbed_probs))).sum(dim=1).mean()
+        # print("delta", self.delta)
+        # print("sigma", self.sigma, "distance", distance)
         if distance < self.delta:
             self.sigma *= 1.01
         else:
