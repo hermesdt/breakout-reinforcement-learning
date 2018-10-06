@@ -11,6 +11,6 @@ print("action shape:", env.action_space.n)
 
 runner = Runner(env)
 # runner.run(5, render=False)
-runner.run(1, render=True, learn=False)
+runner.run(1, render=True, learn=True)
 # while True:
 #     runner.run(episodes=20, render=True, learn=True)

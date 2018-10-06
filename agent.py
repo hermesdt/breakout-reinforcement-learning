@@ -1,7 +1,9 @@
 from collections import deque
 import numpy as np
 import random
+from math import log
 from dqn import DQN
+from dqn_param_noise import DQNParamNoise
 import os
 from memory import Memory
 import torch
@@ -9,10 +11,11 @@ from torch.distributions import Categorical
 
 class Agent():
     def __init__(self, env):
-        target_dqn = DQN(env)
-        self.algo = DQN(env, target_dqn=target_dqn)
-
         self.num_actions = env.action_space.n
+
+        target_dqn = DQNParamNoise(env)
+        self.algo = DQNParamNoise(env, target_dqn=target_dqn)
+
         self.num_steps = 0
         self.episode_steps = 0
         self.env = env
@@ -20,18 +23,20 @@ class Agent():
         self.rewards = deque(maxlen=100)
         self.epsilon = 0.005
         self.total_reward = 0
-    
+
     def reset(self, learn=True):
+        self.algo.episode_start()
         self.total_reward = 0
     
     def store_in_memory(self, state, action, reward, new_state, done):
         self.memory.append((state, action, reward, new_state, done))
     
     def learn_from_memory(self):
-       self.algo.train(self.memory.get_batch(batch_size=32))
+        self.algo.train(self.memory.get_batch(batch_size=32))
     
     def step(self, state, learn=True):
         action_probs = self.algo.eval(np.expand_dims(state, 0)).double()[0]
+        print(action_probs)
         action_probs = action_probs/action_probs.sum()
 
         if random.random() < self.epsilon:
